@@ -1,35 +1,56 @@
 {
   "compilerOptions": {
+    "module": "ES2020",
     "target": "ES2020",
     "useDefineForClassFields": true,
-    "module": "ESNext",
-    "lib": ["ES2020"],
+    "sourceMap": true,
+    "lib": [
+      "ES2018",
+      "ES2018.Promise"
+    ],
     "skipLibCheck": true,
     "allowJs": true,
-
     /* Bundler mode */
-    "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true,
+    "moduleResolution": "Node",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "esModuleInterop": true,
-    "noEmit": true,
+    "noEmit": false,
     "forceConsistentCasingInFileNames": true,
     "removeComments": true,
-    "outDir": "./dist",
-    "declarationDir": "./dist/@types",
+    "rootDirs": [
+      "src/",
+    ],
+    "outDir": "dist",
+    "declarationDir": "dist/@types",
     "declaration": true,
     "baseUrl": "./",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": [
+        "./src/*"
+      ]
     },
-
     /* Linting */
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-
   },
-  "include": ["src/**/*", "test/**/*.spec.ts"]
+  "ts-node": {
+    "esm": true,
+    "experimentalSpecifierResolution": "node",
+    "transpileOnly": true,
+    "files": true,
+    "compilerOptions": {
+      "module": "ES2020"
+    }
+  },
+  "include": [
+    "./src/**/*.ts",
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/*.spec.ts"
+  ],
 }
