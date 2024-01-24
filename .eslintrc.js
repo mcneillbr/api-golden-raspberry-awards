@@ -15,6 +15,12 @@ module.exports = {
             "parserOptions": {
                 "sourceType": "script"
             }
+        },
+        {
+          "files": ["tests/**/*"],
+          "env": {
+            "jest": true
+          }
         }
     ],
     "parserOptions": {

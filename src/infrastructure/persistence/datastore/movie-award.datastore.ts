@@ -1,0 +1,106 @@
+import fs from 'fs';
+import { parse as csvParse } from 'csv';
+import { IMongoClientConfiguration } from '../../database/client';
+import { MovieAwardDto, MovieIntervals } from '@/interfaces';
+import { getAwardSeries } from '../queries';
+
+function parseBoolean(value: string): number {
+  const regex = /on|yes|true|1/gim;
+
+  return regex.test(value) ? 1 : 0;
+}
+
+function parseTextList(value: string): string[] {
+  return value.split(', and').join(',').split(' and ').join(', ').split(', ');
+}
+
+export type MovieAwardDataStoreSetupOptions = {
+  mongoClientConfiguration: IMongoClientConfiguration;
+  csvFile: string;
+  csvDelimiter?: string;
+};
+
+export class MovieAwardDataStore {
+  private static instance: MovieAwardDataStore;
+
+  protected constructor(private mongoClientConfiguration: IMongoClientConfiguration) {}
+
+  static async setupDataStore(options: MovieAwardDataStoreSetupOptions): Promise<void> {
+    MovieAwardDataStore.instance = new MovieAwardDataStore(options.mongoClientConfiguration);
+
+    await MovieAwardDataStore.instance.loadGoldenRaspberryAwardsData(options.csvFile, options.csvDelimiter || ';');
+  }
+
+  public static getInstance(): MovieAwardDataStore {
+    if (!MovieAwardDataStore.instance) {
+      throw new Error('Call setup first');
+    }
+
+    return MovieAwardDataStore.instance;
+  }
+
+  private async loadGoldenRaspberryAwardsData(file: string, delimiter = ';'): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const bulk = this.mongoClientConfiguration.graCollection.initializeUnorderedBulkOp();
+
+      fs.createReadStream(file)
+        .pipe(csvParse({ delimiter, fromLine: 2 }))
+        .on('data', async (row) => {
+          const insMovie = {
+            title: row[1],
+            year: parseInt(row[0]),
+            studios: parseTextList(row[2]),
+            producers: parseTextList(row[3]),
+            winner: parseBoolean(row[4]),
+          };
+
+          try {
+            bulk.insert(insMovie);
+          } catch (error) {
+            console.error(JSON.stringify(error));
+            throw error;
+          }
+        })
+        .on('end', async () => {
+          await bulk.execute();
+          console.log('import csv finished');
+          resolve();
+        })
+        .on('error', (error) => {
+          reject(error);
+          console.log(error.message);
+        });
+    });
+  }
+
+  public async getAwardSeries(): Promise<MovieIntervals[]> {
+    const gr = this.mongoClientConfiguration.graCollection.aggregate(getAwardSeries);
+
+    const result: MovieIntervals[] = [];
+
+    while (await gr.hasNext()) {
+      const row = (await gr.next()) as MovieIntervals;
+
+      if (row) {
+        result.push(row);
+      }
+    }
+
+    return result;
+  }
+
+  public async getAllMovieAward(): Promise<MovieAwardDto[]> {
+    const result = await this.mongoClientConfiguration.graCollection.find().toArray();
+
+    return result.map((row) => {
+      return {
+        id: row._id.toHexString(),
+        title: row.title,
+        year: row.year,
+        studios: row.studios,
+        producers: row.producers,
+        winner: row.winner,
+      };
+    });
+  }
+}
