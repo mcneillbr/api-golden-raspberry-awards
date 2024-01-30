@@ -7,6 +7,7 @@ import { IMongoClientConfiguration, mongoClientSetup } from './../../src/infrast
 import { MovieAwardDataStore } from './../../src/infrastructure/persistence/datastore';
 import { checkFileExists } from './../../src/main/helpers';
 import { MOCK_GET_MOVIE_INTERVAL_RESULT } from '../__common__/get-movie-interval.mock';
+import { MovieIntervals } from './../../src/interfaces';
 
 interface IMongoDatabaseConfiguration {
   stopMongoMemoryServer(): Promise<void>;
@@ -85,5 +86,23 @@ describe('Get a list of award-winning producers', () => {
     expect(response.headers['content-length']).toMatch('339');
     expect(response.status).toEqual(200);
     expect(response.body).toMatchObject(MOCK_GET_MOVIE_INTERVAL_RESULT);
+  });
+
+  
+  it('should have a min entry with an interval equal to 1 and a max entry with an interval equal to 13', async () => {
+    const response = await request(httpServer)
+      .get('/get-movie-interval')
+      .set('Accept', 'application/json');
+
+    const movieIntervals: MovieIntervals = response.body.shift() as MovieIntervals;
+    const min = movieIntervals.min.shift();
+    const max = movieIntervals.max.pop();
+
+    expect(response.headers['content-type']).toMatch(/json/);
+    expect(response.status).toEqual(200);
+    expect(min).toBeDefined();
+    expect(max).toBeDefined();
+    expect(min?.interval).toBe(1);
+    expect(max?.interval).toBe(13);
   });
 });
