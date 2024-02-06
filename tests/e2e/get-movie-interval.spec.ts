@@ -94,8 +94,8 @@ describe('Get a list of award-winning producers', () => {
       .set('Accept', 'application/json');
 
     const movieIntervals: MovieIntervals = response.body as MovieIntervals;
-    const [min] = movieIntervals?.min;
-    const [max] = movieIntervals?.max;
+    const [min] = movieIntervals.min;
+    const [max] = movieIntervals.max;
 
     expect(response.headers['content-type']).toMatch(/json/);
     expect(response.status).toEqual(200);
