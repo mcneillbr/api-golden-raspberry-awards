@@ -24,7 +24,7 @@ export const getAwardSeries = [
     // result of subtracting the maximum year from the minimum year
     $addFields: {
       interval: {
-        $subtract: ['$maxYear', '$minYear'],
+        $max: { $subtract: ['$maxYear', '$minYear'] },
       },
     },
   },
@@ -38,6 +38,8 @@ export const getAwardSeries = [
     $facet: {
       min: [
         { $match: { interval: { $lt: 2 } } },
+        { $sort: { interval: 1 } },
+        { $limit: 1 },
         {
           $project: {
             _id: 0,
@@ -50,7 +52,8 @@ export const getAwardSeries = [
       ],
       max: [
         { $match: { interval: { $gt: 1 } } },
-        { $sort: { interval: 1 } },
+        { $sort: { interval: -1 } },
+        { $limit: 1 },
         {
           $project: {
             _id: 0,

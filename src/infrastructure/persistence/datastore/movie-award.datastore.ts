@@ -62,7 +62,7 @@ export class MovieAwardDataStore {
           }
         })
         .on('end', async () => {
-          await bulk.execute();
+          if (bulk.batches.length > 0) await bulk.execute();
           console.log('import csv finished');
           resolve();
         })
@@ -73,20 +73,14 @@ export class MovieAwardDataStore {
     });
   }
 
-  public async getAwardSeries(): Promise<MovieIntervals[]> {
+  public async getAwardSeries(): Promise<MovieIntervals | void> {
     const gr = this.mongoClientConfiguration.graCollection.aggregate(getAwardSeries);
 
-    const result: MovieIntervals[] = [];
+    if (await gr.hasNext()) {
+      const result = (await gr.next()) as MovieIntervals;
 
-    while (await gr.hasNext()) {
-      const row = (await gr.next()) as MovieIntervals;
-
-      if (row) {
-        result.push(row);
-      }
+      return result;
     }
-
-    return result;
   }
 
   public async getAllMovieAward(): Promise<MovieAwardDto[]> {

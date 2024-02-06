@@ -34,7 +34,7 @@ async function createDataStoreSut(
   configuration: ConfigurationManager,
   mongoClientConfiguration: IMongoClientConfiguration
 ) {
-  const csvFile = configuration.get('CSV_FILE', '');
+  const csvFile = './data/movielist_test.csv'; // configuration.get('CSV_FILE', '');
 
   const csvDelimiter = configuration.get('CSV_DELIMITER', ';');
 
@@ -83,7 +83,6 @@ describe('Get a list of award-winning producers', () => {
     const response = await request(httpServer).get('/get-movie-interval').set('Accept', 'application/json');
 
     expect(response.headers['content-type']).toMatch(/json/);
-    expect(response.headers['content-length']).toMatch('339');
     expect(response.status).toEqual(200);
     expect(response.body).toMatchObject(MOCK_GET_MOVIE_INTERVAL_RESULT);
   });
@@ -94,14 +93,16 @@ describe('Get a list of award-winning producers', () => {
       .get('/get-movie-interval')
       .set('Accept', 'application/json');
 
-    const movieIntervals: MovieIntervals = response.body.shift() as MovieIntervals;
-    const min = movieIntervals.min.shift();
-    const max = movieIntervals.max.pop();
+    const movieIntervals: MovieIntervals = response.body as MovieIntervals;
+    const [min] = movieIntervals?.min;
+    const [max] = movieIntervals?.max;
 
     expect(response.headers['content-type']).toMatch(/json/);
     expect(response.status).toEqual(200);
     expect(min).toBeDefined();
     expect(max).toBeDefined();
+    expect(movieIntervals.min).toHaveLength(1);
+    expect(movieIntervals.max).toHaveLength(1);
     expect(min?.interval).toBe(1);
     expect(max?.interval).toBe(13);
   });

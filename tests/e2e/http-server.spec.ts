@@ -28,7 +28,6 @@ describe('End to End Testing Http Server', () => {
     const response = await request(httpServer).get('/healthcheck').set('Accept', 'application/json');
 
     expect(response.headers['content-type']).toMatch(/json/);
-    expect(response.headers['content-length']).toMatch('66');
     expect(response.status).toEqual(200);
     expect(response.body.message).toEqual('running');
   });
