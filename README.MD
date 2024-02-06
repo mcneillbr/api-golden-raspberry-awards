@@ -170,18 +170,6 @@ obtained two awards faster
         ],
         "max": [
             {
-                "producer": "Bo Derek",
-                "interval": 6,
-                "previousWin": 1984,
-                "followingWin": 1990
-            },
-            {
-                "producer": "Buzz Feitshans",
-                "interval": 9,
-                "previousWin": 1985,
-                "followingWin": 1994
-            },
-            {
                 "producer": "Matthew Vaughn",
                 "interval": 13,
                 "previousWin": 2002,
