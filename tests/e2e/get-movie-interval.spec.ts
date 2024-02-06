@@ -8,7 +8,6 @@ import { MovieAwardDataStore } from './../../src/infrastructure/persistence/data
 import { checkFileExists } from './../../src/main/helpers';
 import { MOCK_GET_MOVIE_INTERVAL_RESULT } from '../__common__/get-movie-interval.mock';
 import { MovieIntervals } from './../../src/interfaces';
-import { MovieIntervals } from './../../src/interfaces';
 
 interface IMongoDatabaseConfiguration {
   stopMongoMemoryServer(): Promise<void>;
@@ -35,7 +34,7 @@ async function createDataStoreSut(
   configuration: ConfigurationManager,
   mongoClientConfiguration: IMongoClientConfiguration
 ) {
-  const csvFile = './data/movielist_test.csv'; // configuration.get('CSV_FILE', '');
+  const csvFile = configuration.get('CSV_FILE', '');
 
   const csvDelimiter = configuration.get('CSV_DELIMITER', ';');
 
