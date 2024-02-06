@@ -73,7 +73,7 @@ export class MovieAwardDataStore {
     });
   }
 
-  public async getAwardSeries(): Promise<MovieIntervals | void> {
+  public async getAwardSeries(): Promise<MovieIntervals> {
     const gr = this.mongoClientConfiguration.graCollection.aggregate(getAwardSeries);
 
     if (await gr.hasNext()) {
@@ -81,6 +81,11 @@ export class MovieAwardDataStore {
 
       return result;
     }
+
+    return {
+      min: [],
+      max: [],
+    };
   }
 
   public async getAllMovieAward(): Promise<MovieAwardDto[]> {
