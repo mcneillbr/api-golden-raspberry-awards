@@ -101,8 +101,8 @@ describe('Get a list of award-winning producers', () => {
     expect(response.status).toEqual(200);
     expect(min).toBeDefined();
     expect(max).toBeDefined();
-    expect(movieIntervals.min).toHaveLength(1);
-    expect(movieIntervals.max).toHaveLength(1);
+    expect(movieIntervals?.min).toHaveLength(1);
+    expect(movieIntervals?.max).toHaveLength(1);
     expect(min?.interval).toBe(1);
     expect(max?.interval).toBe(13);
   });
