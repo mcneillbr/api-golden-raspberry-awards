@@ -11,7 +11,17 @@ function parseBoolean(value: string): number {
 }
 
 function parseTextList(value: string): string[] {
-  return value.split(', and').join(',').split(' and ').join(', ').split(', ');
+  // clean extra space and unicode non-breaking space xa01
+  const reCleanExtraSpace = /[\xA0\s]/gim;
+
+  const values = value
+    .split(', and')
+    .join(',')
+    .split(' and ')
+    .join(', ')
+    .split(', ');
+
+  return values.map((entry) => entry.replace(reCleanExtraSpace, ' '));
 }
 
 export type MovieAwardDataStoreSetupOptions = {
@@ -67,8 +77,8 @@ export class MovieAwardDataStore {
           resolve();
         })
         .on('error', (error) => {
-          reject(error);
           console.log(error.message);
+          reject(error);
         });
     });
   }

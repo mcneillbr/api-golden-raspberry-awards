@@ -15,52 +15,148 @@ export const getAwardSeries = [
       _id: {
         producer: '$producers',
       },
-      // Calculates the minimum and maximum year and the difference between them
-      minYear: { $min: '$year' },
-      maxYear: { $max: '$year' },
-    },
-  },
-  {
-    // result of subtracting the maximum year from the minimum year
-    $addFields: {
-      interval: {
-        $max: { $subtract: ['$maxYear', '$minYear'] },
+      winnerYears: {
+        $addToSet: '$year',
       },
     },
   },
   {
-    // Filters out documents with a year difference greater than zero
-    $match: { interval: { $gt: 0 } },
+    $project: {
+      _id: 0,
+      producer: '$_id.producer',
+      winnerYears: {
+        $sortArray: {
+          input: '$winnerYears',
+          sortBy: -1,
+        },
+      },
+    },
+  },
+  {
+    $project: {
+      _id: 0,
+      producer: 1,
+      winnerYears: 1,
+      yearDifferences: {
+        $map: {
+          input: '$winnerYears',
+          as: 'year',
+          in: {
+            previousWin: {
+              $ifNull: [
+                {
+                  $arrayElemAt: [
+                    '$winnerYears',
+                    {
+                      $add: [
+                        {
+                          $indexOfArray: ['$winnerYears', '$$year'],
+                        },
+                        1,
+                      ],
+                    },
+                  ],
+                },
+                null,
+              ],
+            },
+            followingWin: '$$year',
+            interval: {
+              $subtract: [
+                {
+                  $arrayElemAt: [
+                    '$winnerYears',
+                    {
+                      $indexOfArray: ['$winnerYears', '$$year'],
+                    },
+                  ],
+                },
+                {
+                  $arrayElemAt: [
+                    '$winnerYears',
+                    {
+                      $add: [
+                        {
+                          $indexOfArray: ['$winnerYears', '$$year'],
+                        },
+                        1,
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          },
+        },
+      },
+    },
+  },
+  {
+    $unwind: {
+      path: '$yearDifferences',
+    },
+  },
+  {
+    $project: {
+      _id: 1,
+      producer: 1,
+      winnerYears: 1,
+      interval: '$yearDifferences.interval',
+      previousWin: '$yearDifferences.previousWin',
+      followingWin: '$yearDifferences.followingWin',
+    },
   },
   {
     // Splits the results into two arrays, one for min and one for max
     // Formats documents to the desired format
     $facet: {
       min: [
-        { $match: { interval: { $lt: 2 } } },
-        { $sort: { interval: 1 } },
-        { $limit: 1 },
+        {
+          $match: {
+            interval: {
+              $lt: 2,
+            },
+          },
+        },
         {
           $project: {
             _id: 0,
-            producer: '$_id.producer',
+            producer: '$producer',
             interval: '$interval',
-            previousWin: '$minYear',
-            followingWin: '$maxYear',
+            previousWin: '$previousWin',
+            followingWin: '$followingWin',
+          },
+        },
+        {
+          $sort: {
+            previousWin: 1,
           },
         },
       ],
       max: [
-        { $match: { interval: { $gt: 1 } } },
-        { $sort: { interval: -1 } },
-        { $limit: 1 },
+        {
+          $setWindowFields: {
+            sortBy: { interval: -1 },
+            output: { maxInterval: { $max: '$interval' } },
+          },
+        },
+        {
+          $match: { $expr: { $eq: ['$interval', '$maxInterval'] } },
+        },
         {
           $project: {
             _id: 0,
-            producer: '$_id.producer',
+            producer: '$producer',
             interval: '$interval',
-            previousWin: '$minYear',
-            followingWin: '$maxYear',
+            previousWin: '$previousWin',
+            followingWin: '$followingWin',
+            max_interval: '$maxInterval',
+          },
+        },
+        { $unset: ['maxInterval'] },
+        {
+          $sort: {
+            previousWin: 1,
           },
         },
       ],
